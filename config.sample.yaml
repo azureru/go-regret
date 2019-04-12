@@ -1,0 +1,5 @@
+# twitter keys
+consumer_key : "<<CHANGE_ME>>"
+consumer_secret : "<<CHANGE_ME>>"
+oauth_token : "<<CHANGE_ME>>"
+oauth_token_secret : "<<CHANGE_ME>>"
