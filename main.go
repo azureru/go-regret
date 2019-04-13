@@ -39,6 +39,7 @@ var Mode string
 var GlobalUserId int64
 var DryRun bool
 var DeltaDays int
+var Confirm string
 var GlobalConfig Config
 
 func main() {
@@ -47,11 +48,13 @@ func main() {
 	tweetJsFile := flag.String("file", "", "complete file path of tweet.js")
 	deltaDays := flag.Int("delta", 0, "number of days - to delete tweets that are older than this value")
 	dryRun := flag.Bool("dry", false, "when true - will only show tweets - will not do the actual delete operation")
+	confirm := flag.String("confirm", "n", "set this to `y` to skip confirmation")
 	flag.Parse()
 
 	Mode = *mode
 	DeltaDays = *deltaDays
 	DryRun = *dryRun
+	Confirm = *confirm
 
 	// validate some required specifiers
 	if Mode == "" {
@@ -106,9 +109,11 @@ func main() {
 		fmt.Println("Dry Run Mode - No Actual Deletion will be executed")
 	} else {
 		fmt.Println("Warning! this will delete your tweets [y/n/yes/no]? ")
-		ask := askForConfirmation()
-		if ask == false {
-			os.Exit(0)
+		if Confirm!="y" {
+			ask := askForConfirmation()
+			if ask == false {
+				os.Exit(0)
+			}
 		}
 	}
 

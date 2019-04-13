@@ -35,3 +35,41 @@ Since clean is limited - you will need this mode to purge super-duper old tweet
     -dry=1 
     When specified will only run the deletion on dry-mode, so you can test the effect of your config first     
 ```
+
+## Installation for Cron 
+On my machine I install the binary by:
+```
+ mkdir /opt/go-regret
+ cd /opt/go-regret 
+ wget https://github.com/azureru/go-regret/releases/download/0.1/go-regret_linux_amd64.zip
+ unzip go-regret_linux_amd64.zip
+ rm go-regret_linux_amd64.zip
+```
+
+Create a config.yaml file on the same directory, of course I need to change values in {REPLACE_ME}
+by value that I get on twitter developer page
+
+```
+# twitter keys
+consumer_key : "{REPLACE_ME}"
+consumer_secret : "{REPLACE_ME}"
+oauth_token : "{REPLACE_ME}"
+oauth_token_secret : "{REPLACE_ME}"
+
+# do not purge when retweet exceed this value
+retweet_count : 1
+
+# do not purge when like exceed this value
+like_count : 1
+
+# if 1 - we also purge our replies
+purge_reply : 0
+
+``` 
+
+Create a cron-entry
+```
+0 18 * * * cd /opt/go-regret && ./go-regret_linux_amd64 -mode=clean -delta=30 -confirm=y
+```
+
+Profit!
