@@ -1,19 +1,19 @@
 # go-regret
 
-This is a CLI tool to remove old social media posts (twitter) 
+This is a CLI tool to remove old social media posts (twitter)
 This is to encourage people to live in the moment and quickly move on from the past
 (and as we are getting older - to remove things that we may regret when we were younger)
 
-Me personally, I use a raspberry pi - call `clean` daily - 
+Me personally, I use a raspberry pi - call `clean` daily -
 so my tweets are always cleaned up :) - I can't trust my 30-days previous me :P
 
 ## Usage
-- You need to get customer key, secret, oauth token and oauth secret
+- You need to get customer key, secret, oauth token and oauth secret, [How To](https://developer.twitter.com/en/docs/basics/authentication/guides/access-tokens.html)
 - Copy `config.sample.yaml` to `config.yaml`
 - Edit `config.yaml` and fill the appropriate fields
 - Run the cli `go-regret` with specified mode below
 
-## Clean 
+## Clean
 ```
     ./go-regret -mode=clean -delta=30
 ```
@@ -30,24 +30,24 @@ If you call this daily (e.g. using cron) this will basically keep your tweet alw
 Will clean tweets that listed on `tweet.js` (you can get this tweet.js on Twitter Archive Takeout)
 Since clean is limited - you will need this mode to purge super-duper old tweet
 
-## Additional Params 
+## Additional Params
 ```
-    -dry=1 
-    When specified will only run the deletion on dry-mode, so you can test the effect of your config first     
+    -dry=1
+    When specified will only run the deletion on dry-mode, so you can test the effect of your config first
 ```
 
-## Installation for Cron 
+## Installation for Cron
 On my machine I install the binary by:
 ```
  mkdir /opt/go-regret
- cd /opt/go-regret 
+ cd /opt/go-regret
  wget https://github.com/azureru/go-regret/releases/download/0.1/go-regret_linux_amd64.zip
  unzip go-regret_linux_amd64.zip
  rm go-regret_linux_amd64.zip
 ```
 
 Create a config.yaml file on the same directory, of course I need to change values in {REPLACE_ME}
-by value that I get on twitter developer page
+by value that I get on twitter developer page [How To](https://developer.twitter.com/en/docs/basics/authentication/guides/access-tokens.html)
 
 ```
 # twitter keys
@@ -65,7 +65,7 @@ like_count : 1
 # if 1 - we also purge our replies
 purge_reply : 0
 
-``` 
+```
 
 Create a cron-entry
 ```
