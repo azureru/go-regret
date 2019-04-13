@@ -1,5 +1,15 @@
-# twitter keys
+# twitter keys - get this from app dev on twitter
 consumer_key : "<<CHANGE_ME>>"
 consumer_secret : "<<CHANGE_ME>>"
 oauth_token : "<<CHANGE_ME>>"
 oauth_token_secret : "<<CHANGE_ME>>"
+
+
+# do not purge when retweet exceed this value
+retweet_count : 0
+
+# do not purge when like exceed this value
+like_count : 0
+
+# if 1 - we also purge our replies
+purge_reply : 0
