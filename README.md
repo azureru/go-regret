@@ -33,5 +33,5 @@ Since clean is limited - you will need this mode to purge super-duper old tweet
 ## Additional Params 
 ```
     -dry=1 
-    When specified will only run the deletion on dry-mode, so you test the effect of your config first     
+    When specified will only run the deletion on dry-mode, so you can test the effect of your config first     
 ```

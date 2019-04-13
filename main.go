@@ -41,7 +41,6 @@ var DryRun bool
 var DeltaDays int
 var GlobalConfig Config
 
-
 func main() {
 	// mode is required
 	mode := flag.String("mode", "", "available mode are `clean` or `purge`")
@@ -68,7 +67,7 @@ func main() {
 	}
 	if Mode == "purge" {
 		// on purge mode -file is required
-		if *tweetJsFile=="" {
+		if *tweetJsFile == "" {
 			fmt.Println("-file tweet.js path is required for purge mode")
 			os.Exit(1)
 		}
@@ -135,15 +134,15 @@ func deleteTweet(client *twitter.Client, tweet twitter.Tweet) {
 	fmt.Println("\tFAV:", tweet.FavoriteCount, "RT:", tweet.RetweetCount)
 
 	// check for retweet and favorite count criteria
-	if GlobalConfig.RetweetCount!=0 && tweet.RetweetCount >= GlobalConfig.RetweetCount {
+	if GlobalConfig.RetweetCount != 0 && tweet.RetweetCount >= GlobalConfig.RetweetCount {
 		fmt.Println("\tNo delete - RT is more than", GlobalConfig.RetweetCount)
 		return
 	}
-	if GlobalConfig.LikeCount!=0 && tweet.FavoriteCount >= GlobalConfig.LikeCount {
+	if GlobalConfig.LikeCount != 0 && tweet.FavoriteCount >= GlobalConfig.LikeCount {
 		fmt.Println("\tNo delete - FAV is more than", GlobalConfig.RetweetCount)
 		return
 	}
-	if GlobalConfig.PurgeReply==0 {
+	if GlobalConfig.PurgeReply == 0 {
 		if tweet.InReplyToUserID != 0 {
 			fmt.Println("\tNo delete - is a reply to someone")
 			return
@@ -247,12 +246,12 @@ func tweetArchiveToTweet(el TweetFromArchive) twitter.Tweet {
 	//createdAt, _ := time.Parse(time.RubyDate,el.CreatedAt)
 
 	twit := twitter.Tweet{
-		ID: idInt64,
-		IDStr : el.IdStr,
-		FullText: el.FullText,
+		ID:            idInt64,
+		IDStr:         el.IdStr,
+		FullText:      el.FullText,
 		FavoriteCount: favInt,
-		RetweetCount: retweetInt,
-		CreatedAt: el.CreatedAt,
+		RetweetCount:  retweetInt,
+		CreatedAt:     el.CreatedAt,
 	}
 
 	return twit
