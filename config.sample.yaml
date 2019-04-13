@@ -6,10 +6,10 @@ oauth_token_secret : "<<CHANGE_ME>>"
 
 
 # do not purge when retweet exceed this value
-retweet_count : 0
+retweet_count : 1
 
 # do not purge when like exceed this value
-like_count : 0
+like_count : 1
 
 # if 1 - we also purge our replies
 purge_reply : 0

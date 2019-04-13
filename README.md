@@ -29,3 +29,9 @@ If you call this daily (e.g. using cron) this will basically keep your tweet alw
 ```
 Will clean tweets that listed on `tweet.js` (you can get this tweet.js on Twitter Archive Takeout)
 Since clean is limited - you will need this mode to purge super-duper old tweet
+
+## Additional Params 
+```
+    -dry=1 
+    When specified will only run the deletion on dry-mode, so you test the effect of your config first     
+```

@@ -14,11 +14,6 @@ import (
 	"time"
 )
 
-var Mode string
-var GlobalUserId int64
-var DryRun bool
-var DeltaDays int
-
 type Config struct {
 	ConsumerKey      string `yaml:"consumer_key"`
 	ConsumerSecret   string `yaml:"consumer_secret"`
@@ -39,6 +34,13 @@ type TweetFromArchive struct {
 }
 
 type TweetsFromArchive []TweetFromArchive
+
+var Mode string
+var GlobalUserId int64
+var DryRun bool
+var DeltaDays int
+var GlobalConfig Config
+
 
 func main() {
 	// mode is required
@@ -72,21 +74,19 @@ func main() {
 		}
 	}
 
-	var configBase Config
-
 	// read config first
 	buffer, err := ioutil.ReadFile("./config.yaml")
 	if err != nil {
 		panic("./config.yaml is needed!")
 	}
-	err = yaml.Unmarshal(buffer, &configBase)
+	err = yaml.Unmarshal(buffer, &GlobalConfig)
 	if err != nil {
 		panic("invalid ./config.yaml file")
 	}
 
 	// connect
-	config := oauth1.NewConfig(configBase.ConsumerKey, configBase.ConsumerSecret)
-	token := oauth1.NewToken(configBase.OauthToken, configBase.OauthTokenSecret)
+	config := oauth1.NewConfig(GlobalConfig.ConsumerKey, GlobalConfig.ConsumerSecret)
+	token := oauth1.NewToken(GlobalConfig.OauthToken, GlobalConfig.OauthTokenSecret)
 	httpClient := config.Client(oauth1.NoContext, token)
 
 	client := twitter.NewClient(httpClient)
@@ -104,7 +104,13 @@ func main() {
 	GlobalUserId = user.ID
 
 	if DryRun {
-		fmt.Println("\tDry Run Mode - No Actual Deletion will be executed")
+		fmt.Println("Dry Run Mode - No Actual Deletion will be executed")
+	} else {
+		fmt.Println("Warning! this will delete your tweets [y/n/yes/no]? ")
+		ask := askForConfirmation()
+		if ask == false {
+			os.Exit(0)
+		}
 	}
 
 	// the whole thing
@@ -121,17 +127,40 @@ func deleteTweet(client *twitter.Client, tweet twitter.Tweet) {
 
 	fmt.Println()
 	fmt.Println(whenTweet.Format(time.RubyDate)+"\t", tweet.ID)
-	fmt.Println("\t" + tweet.FullText)
-	fmt.Println("\t❤FAV:", tweet.FavoriteCount, "RT:", tweet.RetweetCount)
+	if tweet.FullText == "" {
+		fmt.Println("\t" + tweet.Text)
+	} else {
+		fmt.Println("\t" + tweet.FullText)
+	}
+	fmt.Println("\tFAV:", tweet.FavoriteCount, "RT:", tweet.RetweetCount)
 
-	// do the actual deletion
-	if !DryRun {
-		_, _, err := client.Statuses.Destroy(tweet.ID, nil)
-		if err != nil {
-			fmt.Println("\tcannot destroy", tweet.ID, err)
-		} else {
-			fmt.Println("\tdeleting ", tweet.ID)
+	// check for retweet and favorite count criteria
+	if GlobalConfig.RetweetCount!=0 && tweet.RetweetCount >= GlobalConfig.RetweetCount {
+		fmt.Println("\tNo delete - RT is more than", GlobalConfig.RetweetCount)
+		return
+	}
+	if GlobalConfig.LikeCount!=0 && tweet.FavoriteCount >= GlobalConfig.LikeCount {
+		fmt.Println("\tNo delete - FAV is more than", GlobalConfig.RetweetCount)
+		return
+	}
+	if GlobalConfig.PurgeReply==0 {
+		if tweet.InReplyToUserID != 0 {
+			fmt.Println("\tNo delete - is a reply to someone")
+			return
 		}
+	}
+
+	// skip deletion when dry-run specified
+	if DryRun {
+		return
+	}
+
+	// the actual delete
+	_, _, err := client.Statuses.Destroy(tweet.ID, nil)
+	if err != nil {
+		fmt.Println("\terror on deletion", tweet.ID, err)
+	} else {
+		fmt.Println("\tdeleting ", tweet.ID)
 	}
 }
 
@@ -144,6 +173,8 @@ func clean(client *twitter.Client, delta int) {
 	deltaDays = int64(delta) * 86400
 	deltaUnixTime := time.Now().Unix() - deltaDays
 
+	fmt.Println("Delta:", delta, " days")
+
 	// initial tweets run
 	for {
 		params := &twitter.UserTimelineParams{
@@ -153,7 +184,6 @@ func clean(client *twitter.Client, delta int) {
 		if maxId != 0 {
 			params.MaxID = maxId
 		}
-		fmt.Println(params)
 		tweets, _, err := client.Timelines.UserTimeline(params)
 		if err != nil {
 			fmt.Println("\tcannot lookup timeline", err)
@@ -161,11 +191,14 @@ func clean(client *twitter.Client, delta int) {
 		}
 		if len(tweets) > 0 {
 			for _, tweet := range tweets {
+
+				// checking for delta
 				createdAt, _ := tweet.CreatedAtTime()
-				if createdAt.Unix() < deltaUnixTime {
-					// the tweet is older than specified delta - remove it
-					fmt.Println(tweet)
+				if createdAt.Unix() > deltaUnixTime {
+					continue
 				}
+
+				deleteTweet(client, tweet)
 			}
 			maxId = tweets[len(tweets)-1 ].ID - 1
 		} else {
@@ -223,4 +256,45 @@ func tweetArchiveToTweet(el TweetFromArchive) twitter.Tweet {
 	}
 
 	return twit
+}
+
+// askForConfirmation uses Scanln to parse user input. A user must type in "yes" or "no" and
+// then press enter. It has fuzzy matching, so "y", "Y", "yes", "YES", and "Yes" all count as
+// confirmations. If the input is not recognized, it will ask again. The function does not return
+// until it gets a valid response from the user. Typically, you should use fmt to print out a question
+// before calling askForConfirmation. E.g. fmt.Println("WARNING: Are you sure? (yes/no)")
+func askForConfirmation() bool {
+	var response string
+	_, err := fmt.Scanln(&response)
+	if err != nil {
+		panic(err)
+	}
+	okayResponses := []string{"y", "Y", "yes", "Yes", "YES"}
+	nokayResponses := []string{"n", "N", "no", "No", "NO"}
+	if containsString(okayResponses, response) {
+		return true
+	} else if containsString(nokayResponses, response) {
+		return false
+	} else {
+		fmt.Println("Please type yes or no and then press enter:")
+		return askForConfirmation()
+	}
+}
+
+// You might want to put the following two functions in a separate utility package.
+
+// posString returns the first index of element in slice.
+// If slice does not contain element, returns -1.
+func posString(slice []string, element string) int {
+	for index, elem := range slice {
+		if elem == element {
+			return index
+		}
+	}
+	return -1
+}
+
+// containsString returns true iff slice contains element
+func containsString(slice []string, element string) bool {
+	return !(posString(slice, element) == -1)
 }
